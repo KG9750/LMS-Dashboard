@@ -113,11 +113,26 @@ app.get("/api/logs/:name", async (req, res) => {
   }
 });
 
+function extractJson(text) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return null;
+  return text.slice(start, end + 1);
+}
+
 app.get("/api/channels", async (req, res) => {
   try {
-    const { stdout } = await exec("openclaw channels list --json");
-    const data = JSON.parse(stdout || "[]");
-    res.json({ channels: data });
+    const { stdout, stderr } = await exec("openclaw channels list --json");
+    const raw = extractJson(stdout) || extractJson(stderr) || "{}";
+    const data = JSON.parse(raw);
+    const channels = [];
+    const chat = data?.chat || {};
+    for (const [type, ids] of Object.entries(chat)) {
+      for (const id of ids || []) {
+        channels.push({ type, channel: type, id, status: "configured" });
+      }
+    }
+    res.json({ channels, raw: data });
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
   }
