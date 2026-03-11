@@ -11,6 +11,7 @@
 - CPU / 内存 / RSS 监控
 - HTTP 健康检查
 - 日志查看（Qwen / MiniMax）
+- OpenClaw Channels 在线/离线状态（实时）
 
 ---
 

@@ -7,6 +7,7 @@ import { startQwen, stopQwen } from "./services/qwen.js";
 import { startMinimax, stopMinimax } from "./services/minimax.js";
 import { startOpenclaw, stopOpenclaw } from "./services/openclaw.js";
 import { sumTokensInSessions } from "./utils/tokens.js";
+import { exec } from "./utils/exec.js";
 
 const app = express();
 app.use(cors());
@@ -107,6 +108,16 @@ app.get("/api/logs/:name", async (req, res) => {
   try {
     const logs = await tailFile(svc.log, 200);
     res.json({ logs });
+  } catch (e) {
+    res.status(500).json({ error: e.message || String(e) });
+  }
+});
+
+app.get("/api/channels", async (req, res) => {
+  try {
+    const { stdout } = await exec("openclaw channels list --json");
+    const data = JSON.parse(stdout || "[]");
+    res.json({ channels: data });
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
   }

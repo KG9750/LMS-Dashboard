@@ -53,6 +53,7 @@ export default function App() {
   const [logs, setLogs] = useState("");
   const [logTitle, setLogTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [channels, setChannels] = useState([]);
 
   const fetchStatus = async () => {
     const res = await fetch(`${API}/api/status`);
@@ -90,9 +91,19 @@ export default function App() {
     return gb.toFixed(2);
   };
 
+  const fetchChannels = async () => {
+    const res = await fetch(`${API}/api/channels`);
+    const json = await res.json();
+    setChannels(json.channels || []);
+  };
+
   useEffect(() => {
     fetchStatus();
-    const t = setInterval(fetchStatus, 3000);
+    fetchChannels();
+    const t = setInterval(() => {
+      fetchStatus();
+      fetchChannels();
+    }, 5000);
     return () => clearInterval(t);
   }, []);
 
@@ -145,6 +156,30 @@ export default function App() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold">OpenClaw Channels</h3>
+            <button className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" onClick={fetchChannels}>刷新</button>
+          </div>
+          <div className="text-sm text-slate-300 space-y-2">
+            {channels.length === 0 ? (
+              <div>暂无 channel 或无法获取状态</div>
+            ) : (
+              channels.map((ch) => (
+                <div key={ch.id || ch.channel} className="flex items-center justify-between">
+                  <div>
+                    <div className="text-slate-100">{ch.channel || ch.name || "unknown"}</div>
+                    <div className="text-xs text-slate-400">{ch.id || "-"}</div>
+                  </div>
+                  <span className={`badge ${ch.status === "online" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    {ch.status || "unknown"}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         <div className="card">
