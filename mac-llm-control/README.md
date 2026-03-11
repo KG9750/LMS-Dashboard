@@ -65,6 +65,7 @@ npm run dev:web
 - 端口配置
 - 日志路径
 - OpenClaw 容器配置与 workspace 路径
+- OpenClaw sessions 路径（用于累计 token）
 
 建议根据你的实际磁盘挂载路径修改 `modelPath`。
 

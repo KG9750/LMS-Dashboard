@@ -6,6 +6,7 @@ import { tailFile } from "./utils/logs.js";
 import { startQwen, stopQwen } from "./services/qwen.js";
 import { startMinimax, stopMinimax } from "./services/minimax.js";
 import { startOpenclaw, stopOpenclaw } from "./services/openclaw.js";
+import { sumTokensInSessions } from "./utils/tokens.js";
 
 const app = express();
 app.use(cors());
@@ -50,6 +51,9 @@ app.get("/api/status", async (req, res) => {
       const st = await dockerContainerState(config.openclaw.name);
       status = st === "not_found" ? "stopped" : st;
       health = await checkHttpHealth(svc.healthUrl);
+      const tokens = sumTokensInSessions(config.openclaw.sessionsDir);
+      result[key] = { name: svc.name, status, port: svc.port, pid, usage, health, tokens };
+      continue;
     } else {
       const open = await isPortOpen(svc.port);
       status = open ? "running" : "stopped";

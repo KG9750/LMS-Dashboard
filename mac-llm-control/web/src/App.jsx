@@ -20,6 +20,9 @@ function ServiceCard({ name, data, onStart, onStop, onRestart, onLogs }) {
       <div className="text-sm text-slate-300 space-y-1">
         <div>Port: <span className="text-slate-100">{data.port || "-"}</span></div>
         <div>PID: <span className="text-slate-100">{data.pid || "-"}</span></div>
+        {data.tokens?.total !== undefined && (
+          <div>Tokens: <span className="text-slate-100">{data.tokens.total}</span></div>
+        )}
       </div>
       <div className="flex gap-2">
         <button

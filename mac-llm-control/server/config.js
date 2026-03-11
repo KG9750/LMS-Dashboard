@@ -19,6 +19,7 @@ export const config = {
     name: "openclaw",
     configDir: "/opt/openclaw",
     workspace: "/Users/leo/Library/Mobile Documents/com~apple~CloudDocs/Personal/LMS Docker File",
+    sessionsDir: "/opt/openclaw/agents/main/sessions",
     port: 18789,
     image: "ghcr.io/openclaw/openclaw:latest"
   }
