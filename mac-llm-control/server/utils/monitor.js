@@ -19,6 +19,16 @@ export async function pidByPort(port) {
   }
 }
 
+export async function pidsByCommand(pattern) {
+  try {
+    const { stdout } = await exec(`pgrep -f "${pattern}"`);
+    const pids = stdout.trim().split("\n").filter(Boolean);
+    return pids;
+  } catch {
+    return [];
+  }
+}
+
 export async function dockerContainerState(name) {
   try {
     const { stdout } = await exec(`docker ps -a --filter name=${name} --format "{{.Status}}"`);

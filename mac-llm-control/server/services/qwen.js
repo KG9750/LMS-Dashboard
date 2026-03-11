@@ -1,6 +1,6 @@
 import { config } from "../config.js";
 import { exec } from "../utils/exec.js";
-import { isPortOpen, pidByPort } from "../utils/monitor.js";
+import { isPortOpen, pidByPort, pidsByCommand } from "../utils/monitor.js";
 
 export async function startQwen() {
   if (await isPortOpen(config.qwen.port)) return { message: "Qwen 已在运行" };
@@ -16,4 +16,10 @@ export async function startQwen() {
 export async function stopQwen() {
   const pid = await pidByPort(config.qwen.port);
   if (pid) await exec(`kill ${pid}`);
+
+  const pattern = `mlx_lm.server.*${config.qwen.modelPath.replace(/\s/g, "\\s")}`;
+  const pids = await pidsByCommand(pattern);
+  for (const p of pids) {
+    await exec(`kill ${p}`);
+  }
 }
