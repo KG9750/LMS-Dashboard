@@ -53,7 +53,7 @@ export default function App() {
   const [logs, setLogs] = useState("");
   const [logTitle, setLogTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [channels, setChannels] = useState([]);
+  const [channels, setChannels] = useState({ local: { channels: [] }, rpi: { channels: [] } });
 
   const fetchStatus = async () => {
     const res = await fetch(`${API}/api/status`);
@@ -94,7 +94,7 @@ export default function App() {
   const fetchChannels = async () => {
     const res = await fetch(`${API}/api/channels`);
     const json = await res.json();
-    setChannels(json.channels || []);
+    setChannels(json || {});
   };
 
   useEffect(() => {
@@ -163,29 +163,37 @@ export default function App() {
             <h3 className="text-lg font-semibold">OpenClaw Channels</h3>
             <button className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" onClick={fetchChannels}>刷新</button>
           </div>
-          <div className="text-sm text-slate-300 space-y-2">
-            {channels.length === 0 ? (
-              <div>暂无 channel 或无法获取状态</div>
-            ) : (
-              channels.map((ch) => (
-                <div key={`${ch.type}-${ch.id}`} className={`flex items-center justify-between ${ch.status === "offline" ? "bg-rose-500/10 rounded px-2 py-1" : ""}`}>
-                  <div>
-                    <div className="text-slate-100">
-                      {ch.channel || ch.name || "unknown"}
-                      {ch.botName ? ` · ${ch.botName}` : ""}
+
+          {(["local", "rpi"]).map((scope) => (
+            <div key={scope} className="mb-4">
+              <div className="text-xs text-slate-400 mb-2">
+                {scope === "local" ? "Mac Studio" : "Raspberry Pi"}
+              </div>
+              <div className="text-sm text-slate-300 space-y-2">
+                {(channels?.[scope]?.channels || []).length === 0 ? (
+                  <div>暂无 channel 或无法获取状态</div>
+                ) : (
+                  (channels?.[scope]?.channels || []).map((ch) => (
+                    <div key={`${scope}-${ch.type}-${ch.id}`} className={`flex items-center justify-between ${ch.status === "offline" ? "bg-rose-500/10 rounded px-2 py-1" : ""}`}>
+                      <div>
+                        <div className="text-slate-100">
+                          {ch.channel || ch.name || "unknown"}
+                          {ch.botName ? ` · ${ch.botName}` : ""}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {ch.type ? `type: ${ch.type}` : ""}
+                          {ch.id ? ` · id: ${ch.id}` : ""}
+                        </div>
+                      </div>
+                      <span className={`badge ${ch.status === "online" ? "bg-emerald-500/20 text-emerald-300" : ch.status === "offline" ? "bg-rose-500/20 text-rose-300" : "bg-amber-500/20 text-amber-300"}`}>
+                        {ch.status || "unknown"}
+                      </span>
                     </div>
-                    <div className="text-xs text-slate-400">
-                      {ch.type ? `type: ${ch.type}` : ""}
-                      {ch.id ? ` · id: ${ch.id}` : ""}
-                    </div>
-                  </div>
-                  <span className={`badge ${ch.status === "online" ? "bg-emerald-500/20 text-emerald-300" : ch.status === "offline" ? "bg-rose-500/20 text-rose-300" : "bg-amber-500/20 text-amber-300"}`}>
-                    {ch.status || "unknown"}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="card">

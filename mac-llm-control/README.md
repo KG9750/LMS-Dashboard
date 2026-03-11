@@ -11,9 +11,9 @@
 - CPU / 内存 / RSS 监控
 - HTTP 健康检查
 - 日志查看（Qwen / MiniMax）
-- OpenClaw Channels 配置列表（来自 `openclaw channels list --json`）
+- OpenClaw Channels 配置列表（本机 + 树莓派）
 - 显示 channel 类型 / id
-- 在线/离线需要 OpenClaw 额外提供状态字段（当前为 configured/unknown）
+- 树莓派通过 SSH 拉取 `openclaw channels status --json`
 
 ---
 
@@ -69,6 +69,7 @@ npm run dev:web
 - 日志路径
 - OpenClaw 容器配置与 workspace 路径
 - OpenClaw sessions 路径（用于累计 token）
+- 树莓派 SSH 配置（host/user/keyPath）
 
 建议根据你的实际磁盘挂载路径修改 `modelPath`。
 

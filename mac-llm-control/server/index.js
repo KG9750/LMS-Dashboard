@@ -120,19 +120,55 @@ function extractJson(text) {
   return text.slice(start, end + 1);
 }
 
+function parseStatusLines(text) {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const out = [];
+  for (const line of lines) {
+    if (!line.includes(":")) continue;
+    const [left, right] = line.split(":" , 2);
+    const name = left.trim();
+    const parts = right.split(",").map(p => p.trim());
+    const status = parts.includes("running") ? "online" : parts.includes("stopped") ? "offline" : "unknown";
+    out.push({ name, status, detail: parts.join(", ") });
+  }
+  return out;
+}
+
+async function fetchLocalChannels() {
+  const { stdout, stderr } = await exec("openclaw channels status --json");
+  const raw = extractJson(stdout) || extractJson(stderr) || "{}";
+  const data = JSON.parse(raw);
+  const channels = [];
+  const chat = data?.chat || {};
+  for (const [type, ids] of Object.entries(chat)) {
+    for (const id of ids || []) {
+      channels.push({ type, channel: type, id, status: "configured" });
+    }
+  }
+  return { channels, raw: data };
+}
+
+async function fetchRpiChannels() {
+  const { host, user, keyPath } = config.rpi;
+  const cmd = `ssh -i "${keyPath}" -o StrictHostKeyChecking=accept-new ${user}@${host} "openclaw channels status --json"`;
+  const { stdout, stderr } = await exec(cmd);
+  const raw = extractJson(stdout) || extractJson(stderr) || "{}";
+  const data = JSON.parse(raw);
+  const channels = [];
+  const chat = data?.chat || {};
+  for (const [type, ids] of Object.entries(chat)) {
+    for (const id of ids || []) {
+      channels.push({ type, channel: type, id, status: "configured" });
+    }
+  }
+  return { channels, raw: data };
+}
+
 app.get("/api/channels", async (req, res) => {
   try {
-    const { stdout, stderr } = await exec("openclaw channels list --json");
-    const raw = extractJson(stdout) || extractJson(stderr) || "{}";
-    const data = JSON.parse(raw);
-    const channels = [];
-    const chat = data?.chat || {};
-    for (const [type, ids] of Object.entries(chat)) {
-      for (const id of ids || []) {
-        channels.push({ type, channel: type, id, status: "configured" });
-      }
-    }
-    res.json({ channels, raw: data });
+    const local = await fetchLocalChannels();
+    const rpi = await fetchRpiChannels();
+    res.json({ local, rpi });
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
   }

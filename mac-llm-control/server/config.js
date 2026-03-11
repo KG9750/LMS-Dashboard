@@ -22,5 +22,10 @@ export const config = {
     sessionsDir: "/opt/openclaw/agents/main/sessions",
     port: 18789,
     image: "ghcr.io/openclaw/openclaw:latest"
+  },
+  rpi: {
+    host: "192.168.50.24",
+    user: "leo",
+    keyPath: "/Users/leo/.ssh/id_ed25519"
   }
 };
