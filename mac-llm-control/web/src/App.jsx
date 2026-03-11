@@ -43,6 +43,10 @@ export default function App() {
     setStatus(json);
   };
 
+  const refreshHealth = async () => {
+    await fetchStatus();
+  };
+
   const call = async (path) => {
     await fetch(`${API}${path}`, { method: "POST" });
     setTimeout(fetchStatus, 1000);
@@ -88,9 +92,14 @@ export default function App() {
             <div key={`health-${key}`} className="card">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">健康检查: {svc.name}</h3>
-                <span className={`badge ${svc.health ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
-                  {svc.health ? `HTTP ${svc.health}` : "N/A"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`badge ${svc.health ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                    {svc.health ? `HTTP ${svc.health}` : "N/A"}
+                  </span>
+                  <button className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-xs" onClick={refreshHealth}>
+                    刷新
+                  </button>
+                </div>
               </div>
               <div className="text-sm text-slate-300 mt-2 space-y-1">
                 <div>CPU: <span className="text-slate-100">{svc.usage?.cpu ?? "-"}%</span></div>
