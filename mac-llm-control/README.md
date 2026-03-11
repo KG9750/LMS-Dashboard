@@ -26,3 +26,5 @@ npm run dev:web
 - OpenClaw 启动依赖环境变量 `GEMINI_API_KEY`
 - 使用了 sudo 创建 /opt/openclaw 目录
 - 端口与模型路径在 `server/config.js` 中配置
+- 健康检查基于 HTTP（默认 /v1/models）
+- 资源监控基于 `ps -p`

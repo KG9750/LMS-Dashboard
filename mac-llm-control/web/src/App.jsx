@@ -83,6 +83,24 @@ export default function App() {
           ))}
         </div>
 
+        <div className="grid md:grid-cols-2 gap-4">
+          {Object.entries(status).map(([key, svc]) => (
+            <div key={`health-${key}`} className="card">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">健康检查: {svc.name}</h3>
+                <span className={`badge ${svc.health ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                  {svc.health ? `HTTP ${svc.health}` : "N/A"}
+                </span>
+              </div>
+              <div className="text-sm text-slate-300 mt-2 space-y-1">
+                <div>CPU: <span className="text-slate-100">{svc.usage?.cpu ?? "-"}%</span></div>
+                <div>MEM: <span className="text-slate-100">{svc.usage?.mem ?? "-"}%</span></div>
+                <div>RSS: <span className="text-slate-100">{svc.usage?.rss ?? "-"} KB</span></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="card">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold">Logs: {logTitle || "-"}</h3>

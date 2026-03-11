@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { config } from "./config.js";
-import { isPortOpen, pidByPort, dockerContainerState } from "./utils/monitor.js";
+import { isPortOpen, pidByPort, dockerContainerState, getProcessUsage, checkHttpHealth } from "./utils/monitor.js";
 import { tailFile } from "./utils/logs.js";
 import { startQwen, stopQwen } from "./services/qwen.js";
 import { startMinimax, stopMinimax } from "./services/minimax.js";
@@ -18,6 +18,7 @@ const services = {
     log: config.qwen.log,
     start: startQwen,
     stop: stopQwen,
+    healthUrl: `http://localhost:${config.qwen.port}/v1/models`
   },
   minimax: {
     name: "MiniMax",
@@ -25,6 +26,7 @@ const services = {
     log: config.minimax.log,
     start: startMinimax,
     stop: stopMinimax,
+    healthUrl: `http://localhost:${config.minimax.port}/v1/models`
   },
   openclaw: {
     name: "OpenClaw",
@@ -32,6 +34,7 @@ const services = {
     log: null,
     start: startOpenclaw,
     stop: stopOpenclaw,
+    healthUrl: `http://localhost:${config.openclaw.port}`
   }
 };
 
@@ -40,15 +43,22 @@ app.get("/api/status", async (req, res) => {
   for (const [key, svc] of Object.entries(services)) {
     let status = "stopped";
     let pid = null;
+    let usage = { cpu: null, mem: null, rss: null };
+    let health = null;
+
     if (key === "openclaw") {
       const st = await dockerContainerState(config.openclaw.name);
       status = st === "not_found" ? "stopped" : st;
+      health = await checkHttpHealth(svc.healthUrl);
     } else {
       const open = await isPortOpen(svc.port);
       status = open ? "running" : "stopped";
       pid = open ? await pidByPort(svc.port) : null;
+      usage = await getProcessUsage(pid);
+      health = await checkHttpHealth(svc.healthUrl);
     }
-    result[key] = { name: svc.name, status, port: svc.port, pid };
+
+    result[key] = { name: svc.name, status, port: svc.port, pid, usage, health };
   }
   res.json(result);
 });

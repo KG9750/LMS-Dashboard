@@ -28,3 +28,28 @@ export async function dockerContainerState(name) {
     return "unknown";
   }
 }
+
+export async function getProcessUsage(pid) {
+  if (!pid) return { cpu: null, mem: null, rss: null };
+  try {
+    const { stdout } = await exec(`ps -p ${pid} -o %cpu=,%mem=,rss=`);
+    const [cpu, mem, rss] = stdout.trim().split(/\s+/);
+    return {
+      cpu: cpu ? Number(cpu) : null,
+      mem: mem ? Number(mem) : null,
+      rss: rss ? Number(rss) : null
+    };
+  } catch {
+    return { cpu: null, mem: null, rss: null };
+  }
+}
+
+export async function checkHttpHealth(url) {
+  try {
+    const { stdout } = await exec(`curl -s -o /dev/null -w "%{http_code}" --max-time 2 "${url}"`);
+    const code = Number(stdout.trim());
+    return code >= 200 && code < 500 ? code : null;
+  } catch {
+    return null;
+  }
+}
