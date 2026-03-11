@@ -168,10 +168,16 @@ export default function App() {
               <div>暂无 channel 或无法获取状态</div>
             ) : (
               channels.map((ch) => (
-                <div key={ch.id || ch.channel} className="flex items-center justify-between">
+                <div key={ch.id || ch.channel} className={`flex items-center justify-between ${ch.status !== "online" ? "bg-rose-500/10 rounded px-2 py-1" : ""}`}>
                   <div>
-                    <div className="text-slate-100">{ch.channel || ch.name || "unknown"}</div>
-                    <div className="text-xs text-slate-400">{ch.id || "-"}</div>
+                    <div className="text-slate-100">
+                      {ch.channel || ch.name || "unknown"}
+                      {ch.botName ? ` · ${ch.botName}` : ""}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {ch.type ? `type: ${ch.type}` : ""}
+                      {ch.id ? ` · id: ${ch.id}` : ""}
+                    </div>
                   </div>
                   <span className={`badge ${ch.status === "online" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
                     {ch.status || "unknown"}

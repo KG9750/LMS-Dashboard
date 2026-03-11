@@ -12,6 +12,8 @@
 - HTTP 健康检查
 - 日志查看（Qwen / MiniMax）
 - OpenClaw Channels 在线/离线状态（实时）
+- 显示 channel 类型 / bot 名称
+- 离线 channel 高亮提示
 
 ---
 
