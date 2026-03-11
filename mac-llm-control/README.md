@@ -24,13 +24,24 @@
 
 ## 运行方式
 
-### 方式 A：一键启动（推荐）
+### 方式 A：一键启动（前台开发）
 ```bash
 cd mac-llm-control
 ./scripts/start-dev.sh
 ```
 
-### 方式 B：手动启动
+### 方式 B：后台常驻（不自启）
+```bash
+cd mac-llm-control
+# 先安装 pm2（仅首次）
+npm i -g pm2
+
+./scripts/start-daemon.sh
+# 停止：
+./scripts/stop-daemon.sh
+```
+
+### 方式 C：手动启动
 ```bash
 # 1) 安装依赖
 cd mac-llm-control
