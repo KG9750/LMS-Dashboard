@@ -67,8 +67,8 @@ app.post("/api/start/:name", async (req, res) => {
   const svc = services[req.params.name];
   if (!svc) return res.status(404).json({ error: "unknown service" });
   try {
-    await svc.start();
-    res.json({ ok: true });
+    const result = await svc.start();
+    res.json({ ok: true, ...result });
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
   }
@@ -79,7 +79,7 @@ app.post("/api/stop/:name", async (req, res) => {
   if (!svc) return res.status(404).json({ error: "unknown service" });
   try {
     await svc.stop();
-    res.json({ ok: true });
+    res.json({ ok: true, message: "已停止" });
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
   }

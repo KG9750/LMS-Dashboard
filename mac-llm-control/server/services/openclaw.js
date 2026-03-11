@@ -19,6 +19,7 @@ export async function startOpenclaw() {
     ${config.openclaw.image}`;
   await exec(`sudo mkdir -p "${config.openclaw.configDir}/workspace"`);
   await exec(cmd);
+  return { message: "OpenClaw 启动成功" };
 }
 
 export async function stopOpenclaw() {

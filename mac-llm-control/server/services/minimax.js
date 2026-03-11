@@ -3,7 +3,7 @@ import { exec } from "../utils/exec.js";
 import { isPortOpen, pidByPort } from "../utils/monitor.js";
 
 export async function startMinimax() {
-  if (await isPortOpen(config.minimax.port)) throw new Error("MiniMax 已在运行");
+  if (await isPortOpen(config.minimax.port)) return { message: "MiniMax 已在运行" };
   const cmd = `nohup mlx_lm.server \
     --model "${config.minimax.modelPath}" \
     --port ${config.minimax.port} \
@@ -11,6 +11,7 @@ export async function startMinimax() {
     --trust-remote-code \
     > "${config.minimax.log}" 2> "${config.minimax.err}" &`;
   await exec(cmd);
+  return { message: "MiniMax 启动成功" };
 }
 
 export async function stopMinimax() {
