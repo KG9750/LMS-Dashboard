@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.card {
+  @apply bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg;
+}
+.badge {
+  @apply text-xs px-2 py-1 rounded-full;
+}

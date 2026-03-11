@@ -1,0 +1,11 @@
+{
+  "name": "mac-llm-control",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "npm --workspace web run dev & npm --workspace server run dev",
+    "dev:server": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev"
+  }
+}

@@ -1,0 +1,96 @@
+import React, { useEffect, useState } from "react";
+
+const API = "http://localhost:3001";
+
+const statusColor = (status) => {
+  if (status === "running") return "bg-emerald-500/20 text-emerald-300";
+  if (status && status.startsWith("Up")) return "bg-emerald-500/20 text-emerald-300";
+  if (status === "stopped" || status === "not_found") return "bg-rose-500/20 text-rose-300";
+  return "bg-amber-500/20 text-amber-300";
+};
+
+function ServiceCard({ name, data, onStart, onStop, onRestart, onLogs }) {
+  return (
+    <div className="card space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{name}</h3>
+        <span className={`badge ${statusColor(data.status)}`}>{data.status || "unknown"}</span>
+      </div>
+      <div className="text-sm text-slate-300 space-y-1">
+        <div>Port: <span className="text-slate-100">{data.port || "-"}</span></div>
+        <div>PID: <span className="text-slate-100">{data.pid || "-"}</span></div>
+      </div>
+      <div className="flex gap-2">
+        <button className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500" onClick={onStart}>Start</button>
+        <button className="px-3 py-1 rounded bg-rose-600 hover:bg-rose-500" onClick={onStop}>Stop</button>
+        <button className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" onClick={onRestart}>Restart</button>
+        {onLogs && (
+          <button className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500" onClick={onLogs}>Logs</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [status, setStatus] = useState({});
+  const [logs, setLogs] = useState("");
+  const [logTitle, setLogTitle] = useState("");
+
+  const fetchStatus = async () => {
+    const res = await fetch(`${API}/api/status`);
+    const json = await res.json();
+    setStatus(json);
+  };
+
+  const call = async (path) => {
+    await fetch(`${API}${path}`, { method: "POST" });
+    setTimeout(fetchStatus, 1000);
+  };
+
+  const fetchLogs = async (name) => {
+    const res = await fetch(`${API}/api/logs/${name}`);
+    const json = await res.json();
+    setLogs(json.logs || "");
+    setLogTitle(name);
+  };
+
+  useEffect(() => {
+    fetchStatus();
+    const t = setInterval(fetchStatus, 3000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="min-h-screen p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Mac LLM Control</h1>
+          <p className="text-slate-400 text-sm">本地模型与 OpenClaw 控制面板</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          {Object.entries(status).map(([key, svc]) => (
+            <ServiceCard
+              key={key}
+              name={svc.name}
+              data={svc}
+              onStart={() => call(`/api/start/${key}`)}
+              onStop={() => call(`/api/stop/${key}`)}
+              onRestart={() => call(`/api/restart/${key}`)}
+              onLogs={key === "openclaw" ? null : () => fetchLogs(key)}
+            />
+          ))}
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold">Logs: {logTitle || "-"}</h3>
+            <button className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" onClick={() => setLogs("")}>Clear</button>
+          </div>
+          <pre className="text-xs whitespace-pre-wrap text-slate-300 max-h-64 overflow-auto">{logs || "(empty)"}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
