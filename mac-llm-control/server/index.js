@@ -186,11 +186,22 @@ function parseModelFromStatus(raw) {
   return raw?.model?.primary || raw?.model?.id || raw?.model || null;
 }
 
+function buildOpenclawCmd(machine, subcmd) {
+  if (machine.openclawViaDocker) {
+    const name = machine.containerName || "openclaw";
+    return `docker exec ${name} openclaw ${subcmd}`;
+  }
+  return `openclaw ${subcmd}`;
+}
+
 async function fetchMachine(machine) {
   const runner = machine.local ? runLocal : (cmd) => runRemote(machine, cmd);
+  const statusCmd = buildOpenclawCmd(machine, "status --json");
+  const channelsCmd = buildOpenclawCmd(machine, "channels status --json");
+
   const [{ stdout: statusOut, stderr: statusErr }, { stdout: chOut, stderr: chErr }] = await Promise.all([
-    runner("openclaw status --json"),
-    runner("openclaw channels status --json")
+    runner(statusCmd),
+    runner(channelsCmd)
   ]);
 
   const statusRaw = JSON.parse(extractJson(statusOut) || extractJson(statusErr) || "{}" );
@@ -198,7 +209,8 @@ async function fetchMachine(machine) {
 
   let docker = null;
   if (machine.hasDocker) {
-    const { stdout: dOut } = await runner("docker inspect openclaw 2>/dev/null || true");
+    const containerName = machine.containerName || "openclaw";
+    const { stdout: dOut } = await runner(`docker inspect ${containerName} 2>/dev/null || true`);
     const arr = JSON.parse(dOut || "[]");
     const inspect = arr[0] || null;
     docker = {

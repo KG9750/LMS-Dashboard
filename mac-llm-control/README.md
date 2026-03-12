@@ -72,7 +72,7 @@ npm run dev:web
 - 日志路径
 - OpenClaw 容器配置与 workspace 路径
 - OpenClaw sessions 路径（用于累计 token）
-- 多机器 SSH 配置（host/user/keyPath）
+- 多机器 SSH 配置（host/user/keyPath/openclawViaDocker/containerName）
 
 建议根据你的实际磁盘挂载路径修改 `modelPath`。
 OpenClaw 宿主机路径默认使用：

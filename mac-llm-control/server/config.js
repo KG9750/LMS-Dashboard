@@ -31,6 +31,8 @@ export const config = {
       user: "leo",
       keyPath: "/Users/leo/.ssh/id_ed25519",
       hasDocker: true,
+      openclawViaDocker: true,
+      containerName: "openclaw",
       enabled: true
     },
     {
@@ -40,6 +42,8 @@ export const config = {
       user: "leo",
       keyPath: "/Users/leo/.ssh/id_ed25519",
       hasDocker: true,
+      openclawViaDocker: false,
+      containerName: "openclaw",
       enabled: false
     },
     {
@@ -49,6 +53,8 @@ export const config = {
       user: "leo",
       keyPath: "/Users/leo/.ssh/id_ed25519",
       hasDocker: false,
+      openclawViaDocker: false,
+      containerName: null,
       enabled: true
     },
     {
@@ -58,6 +64,8 @@ export const config = {
       user: "leo",
       keyPath: "/Users/leo/.ssh/id_ed25519",
       hasDocker: false,
+      openclawViaDocker: false,
+      containerName: null,
       enabled: true
     }
   ]
