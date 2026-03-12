@@ -73,6 +73,9 @@ npm run dev:web
 - 树莓派 SSH 配置（host/user/keyPath）
 
 建议根据你的实际磁盘挂载路径修改 `modelPath`。
+OpenClaw 宿主机路径默认使用：
+- /Users/leo/openclaw/config  → 容器 /root/.openclaw
+- /Users/leo/openclaw/workspace → 容器 /root/.openclaw/workspace
 
 ---
 
