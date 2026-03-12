@@ -23,6 +23,15 @@ function ServiceCard({ name, data, onStart, onStop, onRestart, onLogs }) {
         {data.tokens?.total !== undefined && (
           <div>Tokens: <span className="text-slate-100">{data.tokens.total}</span></div>
         )}
+        {data.docker?.containerState && (
+          <div>Container: <span className="text-slate-100">{data.docker.containerState}</span></div>
+        )}
+        {data.docker?.startedAt && (
+          <div>Started: <span className="text-slate-100">{data.docker.startedAt}</span></div>
+        )}
+        {data.docker?.healthStatus && (
+          <div>Health: <span className="text-slate-100">{data.docker.healthStatus}</span></div>
+        )}
       </div>
       <div className="flex gap-2">
         <button

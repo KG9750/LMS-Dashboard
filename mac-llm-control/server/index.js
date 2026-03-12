@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { config } from "./config.js";
-import { isPortOpen, pidByPort, dockerContainerState, getProcessUsage, checkHttpHealth } from "./utils/monitor.js";
+import { isPortOpen, pidByPort, dockerContainerState, getProcessUsage, checkHttpHealth, dockerInspect, dockerInfo } from "./utils/monitor.js";
 import { tailFile } from "./utils/logs.js";
 import { startQwen, stopQwen } from "./services/qwen.js";
 import { startMinimax, stopMinimax } from "./services/minimax.js";
@@ -51,9 +51,29 @@ app.get("/api/status", async (req, res) => {
     if (key === "openclaw") {
       const st = await dockerContainerState(config.openclaw.name);
       status = st === "not_found" ? "stopped" : st;
+      const inspect = await dockerInspect(config.openclaw.name);
+      const docker = await dockerInfo();
+      const containerState = inspect?.State?.Status || null;
+      const startedAt = inspect?.State?.StartedAt || null;
+      const healthStatus = inspect?.State?.Health?.Status || null;
       health = await checkHttpHealth(svc.healthUrl);
       const tokens = sumTokensInSessions(config.openclaw.sessionsDir);
-      result[key] = { name: svc.name, status, port: svc.port, pid, usage, health, tokens };
+      result[key] = {
+        name: svc.name,
+        status,
+        port: svc.port,
+        pid,
+        usage,
+        health,
+        tokens,
+        docker: {
+          serverVersion: docker?.ServerVersion || null,
+          operatingSystem: docker?.OperatingSystem || null,
+          containerState,
+          startedAt,
+          healthStatus
+        }
+      };
       continue;
     } else {
       const open = await isPortOpen(svc.port);

@@ -39,6 +39,25 @@ export async function dockerContainerState(name) {
   }
 }
 
+export async function dockerInspect(name) {
+  try {
+    const { stdout } = await exec(`docker inspect ${name}`);
+    const arr = JSON.parse(stdout || "[]");
+    return arr[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function dockerInfo() {
+  try {
+    const { stdout } = await exec(`docker info --format "{{json .}}"`);
+    return JSON.parse(stdout || "{}") || {};
+  } catch {
+    return null;
+  }
+}
+
 export async function getProcessUsage(pid) {
   if (!pid) return { cpu: null, mem: null, rss: null };
   try {

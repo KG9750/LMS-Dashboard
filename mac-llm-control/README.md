@@ -14,6 +14,7 @@
 - OpenClaw Channels 配置列表（本机 + 树莓派）
 - 显示 channel 类型 / id
 - 树莓派通过 SSH 拉取 `openclaw channels status --json`
+- OpenClaw Docker 状态（container state / startedAt / health）
 
 ---
 
