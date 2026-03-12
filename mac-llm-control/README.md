@@ -33,6 +33,14 @@ cd mac-llm-control
 ./scripts/start-dev.sh
 ```
 
+### 方式 A2：智能启动（端口检测）
+```bash
+cd mac-llm-control
+./scripts/start-smart.sh
+# 如需强制释放端口：
+# FORCE_KILL=1 ./scripts/start-smart.sh
+```
+
 ### 方式 B：后台常驻（不自启）
 ```bash
 cd mac-llm-control
