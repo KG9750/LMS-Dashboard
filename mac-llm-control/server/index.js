@@ -189,9 +189,11 @@ function parseModelFromStatus(raw) {
 function buildOpenclawCmd(machine, subcmd) {
   if (machine.openclawViaDocker) {
     const name = machine.containerName || "openclaw";
-    return `docker exec ${name} openclaw ${subcmd}`;
+    const docker = machine.dockerPath || "docker";
+    return `${docker} exec ${name} openclaw ${subcmd}`;
   }
-  return `openclaw ${subcmd}`;
+  const openclaw = machine.openclawPath || "openclaw";
+  return `${openclaw} ${subcmd}`;
 }
 
 async function fetchMachine(machine) {
