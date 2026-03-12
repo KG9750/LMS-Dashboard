@@ -60,6 +60,9 @@ npm run dev:web
 前端地址：http://localhost:3000  
 后端地址：http://localhost:3001
 
+关闭后端（释放 3001）：
+- 点击页面右上角 **Close Dashboard**
+
 ---
 
 ## 配置说明

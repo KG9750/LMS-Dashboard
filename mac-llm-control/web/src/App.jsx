@@ -146,9 +146,19 @@ export default function App() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Mac LLM Control</h1>
-          <p className="text-slate-400 text-sm">本地模型与 OpenClaw 控制面板</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Mac LLM Control</h1>
+            <p className="text-slate-400 text-sm">本地模型与 OpenClaw 控制面板</p>
+          </div>
+          <button
+            className="px-3 py-1 rounded bg-rose-600 hover:bg-rose-500 text-sm"
+            onClick={async () => {
+              await fetch(`${API}/api/shutdown`, { method: "POST" });
+            }}
+          >
+            Close Dashboard
+          </button>
         </div>
 
         {message && (

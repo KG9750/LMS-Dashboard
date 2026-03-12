@@ -232,6 +232,11 @@ app.get("/api/machines", async (req, res) => {
   res.json({ machines });
 });
 
+app.post("/api/shutdown", (req, res) => {
+  res.json({ ok: true, message: "后端正在关闭" });
+  setTimeout(() => process.exit(0), 300);
+});
+
 const port = 3001;
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
