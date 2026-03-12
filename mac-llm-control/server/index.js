@@ -147,7 +147,7 @@ async function runLocal(cmd) {
 async function runRemote(machine, cmd) {
   const { host, user, keyPath } = machine;
   if (!host) throw new Error(`missing host for ${machine.name}`);
-  const full = `ssh -i "${keyPath}" -o StrictHostKeyChecking=accept-new ${user}@${host} "${cmd}"`;
+  const full = `ssh -i "${keyPath}" -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new ${user}@${host} "${cmd}"`;
   return exec(full);
 }
 
