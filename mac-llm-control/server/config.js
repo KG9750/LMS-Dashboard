@@ -23,9 +23,42 @@ export const config = {
     port: 18789,
     image: "ghcr.io/openclaw/openclaw:latest"
   },
-  rpi: {
-    host: "192.168.50.24",
-    user: "leo",
-    keyPath: "/Users/leo/.ssh/id_ed25519"
-  }
+  machines: [
+    {
+      id: "studio-m3",
+      name: "Mac Studio M3 Ultra",
+      host: "192.168.50.191",
+      user: "leo",
+      keyPath: "/Users/leo/.ssh/id_ed25519",
+      hasDocker: true,
+      enabled: true
+    },
+    {
+      id: "mbp-m4",
+      name: "MacBook Pro M4",
+      host: null,
+      user: "leo",
+      keyPath: "/Users/leo/.ssh/id_ed25519",
+      hasDocker: true,
+      enabled: false
+    },
+    {
+      id: "mbp-m2",
+      name: "MacBook Pro M2",
+      host: "192.168.50.144",
+      user: "leo",
+      keyPath: "/Users/leo/.ssh/id_ed25519",
+      hasDocker: false,
+      enabled: true
+    },
+    {
+      id: "rpi4",
+      name: "Raspberry Pi 4",
+      host: "192.168.50.24",
+      user: "leo",
+      keyPath: "/Users/leo/.ssh/id_ed25519",
+      hasDocker: false,
+      enabled: true
+    }
+  ]
 };

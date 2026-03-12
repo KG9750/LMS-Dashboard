@@ -57,12 +57,39 @@ function ServiceCard({ name, data, onStart, onStop, onRestart, onLogs }) {
   );
 }
 
+function MachineCard({ machine }) {
+  const onlineChannels = (machine.channels || []).filter(c => c.status === "online");
+  const bot = onlineChannels[0]?.botName || onlineChannels[0]?.channel || "-";
+  const model = machine.model || "-";
+  return (
+    <div className="card space-y-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{machine.name}</h3>
+        <span className={`badge ${machine.docker?.containerState === "running" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+          {machine.docker?.containerState || (machine.error ? "error" : "no-docker")}
+        </span>
+      </div>
+      {machine.error ? (
+        <div className="text-sm text-rose-300">{machine.error}</div>
+      ) : (
+        <div className="text-sm text-slate-300 space-y-1">
+          <div>Model: <span className="text-slate-100">{model}</span></div>
+          <div>Bot: <span className="text-slate-100">{bot}</span></div>
+          {machine.docker?.healthStatus && (
+            <div>Health: <span className="text-slate-100">{machine.docker.healthStatus}</span></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [status, setStatus] = useState({});
   const [logs, setLogs] = useState("");
   const [logTitle, setLogTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [channels, setChannels] = useState({ local: { channels: [] }, rpi: { channels: [] } });
+  const [machines, setMachines] = useState([]);
 
   const fetchStatus = async () => {
     const res = await fetch(`${API}/api/status`);
@@ -100,18 +127,18 @@ export default function App() {
     return gb.toFixed(2);
   };
 
-  const fetchChannels = async () => {
-    const res = await fetch(`${API}/api/channels`);
+  const fetchMachines = async () => {
+    const res = await fetch(`${API}/api/machines`);
     const json = await res.json();
-    setChannels(json || {});
+    setMachines(json.machines || []);
   };
 
   useEffect(() => {
     fetchStatus();
-    fetchChannels();
+    fetchMachines();
     const t = setInterval(() => {
       fetchStatus();
-      fetchChannels();
+      fetchMachines();
     }, 5000);
     return () => clearInterval(t);
   }, []);
@@ -130,79 +157,61 @@ export default function App() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-4">
-          {Object.entries(status).map(([key, svc]) => (
-            <ServiceCard
-              key={key}
-              name={svc.name}
-              data={svc}
-              onStart={() => call(`/api/start/${key}`)}
-              onStop={() => call(`/api/stop/${key}`)}
-              onRestart={() => call(`/api/restart/${key}`)}
-              onLogs={key === "openclaw" ? null : () => fetchLogs(key)}
-            />
-          ))}
+        {/* 第一行：多机器 OpenClaw/Docker */}
+        <div>
+          <h2 className="text-sm text-slate-400 mb-2">机器与 OpenClaw</h2>
+          <div className="grid md:grid-cols-4 gap-4">
+            {machines.map((m) => (
+              <MachineCard key={m.id} machine={m} />
+            ))}
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {Object.entries(status).map(([key, svc]) => (
-            <div key={`health-${key}`} className="card">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">健康检查: {svc.name}</h3>
-                <div className="flex items-center gap-2">
-                  <span className={`badge ${svc.health ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
-                    {svc.health ? `HTTP ${svc.health}` : "N/A"}
-                  </span>
-                  <button className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-xs" onClick={refreshHealth}>
-                    刷新
-                  </button>
+        {/* 第二行：本地模型 */}
+        <div>
+          <h2 className="text-sm text-slate-400 mb-2">本地模型</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {Object.entries(status)
+              .filter(([key]) => key !== "openclaw")
+              .map(([key, svc]) => (
+                <ServiceCard
+                  key={key}
+                  name={svc.name}
+                  data={svc}
+                  onStart={() => call(`/api/start/${key}`)}
+                  onStop={() => call(`/api/stop/${key}`)}
+                  onRestart={() => call(`/api/restart/${key}`)}
+                  onLogs={() => fetchLogs(key)}
+                />
+              ))}
+          </div>
+        </div>
+
+        {/* 第三行：健康检查 */}
+        <div>
+          <h2 className="text-sm text-slate-400 mb-2">健康检查</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {Object.entries(status).map(([key, svc]) => (
+              <div key={`health-${key}`} className="card">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">健康检查: {svc.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={`badge ${svc.health ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                      {svc.health ? `HTTP ${svc.health}` : "N/A"}
+                    </span>
+                    <button className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-xs" onClick={refreshHealth}>
+                      刷新
+                    </button>
+                  </div>
+                </div>
+                <div className="text-sm text-slate-300 mt-2 space-y-1">
+                  <div>CPU: <span className="text-slate-100">{svc.usage?.cpu ?? "-"}%</span></div>
+                  <div>MEM: <span className="text-slate-100">{svc.usage?.mem ?? "-"}%</span></div>
+                  <div>RSS: <span className="text-slate-100">{rssToGb(svc.usage?.rss)} GB</span></div>
                 </div>
               </div>
-              <div className="text-sm text-slate-300 mt-2 space-y-1">
-                <div>CPU: <span className="text-slate-100">{svc.usage?.cpu ?? "-"}%</span></div>
-                <div>MEM: <span className="text-slate-100">{svc.usage?.mem ?? "-"}%</span></div>
-                <div>RSS: <span className="text-slate-100">{rssToGb(svc.usage?.rss)} GB</span></div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="card">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold">OpenClaw Channels</h3>
-            <button className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" onClick={fetchChannels}>刷新</button>
+            ))}
           </div>
-
-          {(["local", "rpi"]).map((scope) => (
-            <div key={scope} className="mb-4">
-              <div className="text-xs text-slate-400 mb-2">
-                {scope === "local" ? "Mac Studio" : "Raspberry Pi"}
-              </div>
-              <div className="text-sm text-slate-300 space-y-2">
-                {(channels?.[scope]?.channels || []).length === 0 ? (
-                  <div>暂无 channel 或无法获取状态</div>
-                ) : (
-                  (channels?.[scope]?.channels || []).map((ch) => (
-                    <div key={`${scope}-${ch.type}-${ch.id}`} className={`flex items-center justify-between ${ch.status === "offline" ? "bg-rose-500/10 rounded px-2 py-1" : ""}`}>
-                      <div>
-                        <div className="text-slate-100">
-                          {ch.channel || ch.name || "unknown"}
-                          {ch.botName ? ` · ${ch.botName}` : ""}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          {ch.type ? `type: ${ch.type}` : ""}
-                          {ch.id ? ` · id: ${ch.id}` : ""}
-                        </div>
-                      </div>
-                      <span className={`badge ${ch.status === "online" ? "bg-emerald-500/20 text-emerald-300" : ch.status === "offline" ? "bg-rose-500/20 text-rose-300" : "bg-amber-500/20 text-amber-300"}`}>
-                        {ch.status || "unknown"}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          ))}
         </div>
 
         <div className="card">

@@ -140,58 +140,96 @@ function extractJson(text) {
   return text.slice(start, end + 1);
 }
 
-function parseStatusLines(text) {
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  const out = [];
-  for (const line of lines) {
-    if (!line.includes(":")) continue;
-    const [left, right] = line.split(":" , 2);
-    const name = left.trim();
-    const parts = right.split(",").map(p => p.trim());
-    const status = parts.includes("running") ? "online" : parts.includes("stopped") ? "offline" : "unknown";
-    out.push({ name, status, detail: parts.join(", ") });
-  }
-  return out;
+async function runLocal(cmd) {
+  return exec(cmd);
 }
 
-async function fetchLocalChannels() {
-  const { stdout, stderr } = await exec("openclaw channels status --json");
-  const raw = extractJson(stdout) || extractJson(stderr) || "{}";
-  const data = JSON.parse(raw);
+async function runRemote(machine, cmd) {
+  const { host, user, keyPath } = machine;
+  if (!host) throw new Error(`missing host for ${machine.name}`);
+  const full = `ssh -i "${keyPath}" -o StrictHostKeyChecking=accept-new ${user}@${host} "${cmd}"`;
+  return exec(full);
+}
+
+function parseChannelsStatus(raw) {
   const channels = [];
-  const chat = data?.chat || {};
-  for (const [type, ids] of Object.entries(chat)) {
-    for (const id of ids || []) {
-      channels.push({ type, channel: type, id, status: "configured" });
+  const channelMeta = raw?.channelMeta || [];
+  const channelLabels = raw?.channelLabels || {};
+  const channelDetailLabels = raw?.channelDetailLabels || {};
+  const channelAccounts = raw?.channelAccounts || {};
+  const channelsStatus = raw?.channels || {};
+
+  for (const meta of channelMeta) {
+    const id = meta.id;
+    const label = meta.label || channelLabels[id] || id;
+    const detail = meta.detailLabel || channelDetailLabels[id] || "";
+    const status = channelsStatus[id] || {};
+    const accounts = channelAccounts[id] || [];
+    const running = status.running || accounts.some(a => a.running);
+    const bot = accounts[0]?.accountId || "default";
+
+    channels.push({
+      type: id,
+      channel: label,
+      detailLabel: detail,
+      botName: bot,
+      status: running ? "online" : "offline",
+      lastError: status.lastError || null,
+      mode: status.mode || accounts[0]?.mode || null
+    });
+  }
+
+  return channels;
+}
+
+function parseModelFromStatus(raw) {
+  return raw?.model?.primary || raw?.model?.id || raw?.model || null;
+}
+
+async function fetchMachine(machine) {
+  const runner = machine.local ? runLocal : (cmd) => runRemote(machine, cmd);
+  const [{ stdout: statusOut, stderr: statusErr }, { stdout: chOut, stderr: chErr }] = await Promise.all([
+    runner("openclaw status --json"),
+    runner("openclaw channels status --json")
+  ]);
+
+  const statusRaw = JSON.parse(extractJson(statusOut) || extractJson(statusErr) || "{}" );
+  const channelsRaw = JSON.parse(extractJson(chOut) || extractJson(chErr) || "{}" );
+
+  let docker = null;
+  if (machine.hasDocker) {
+    const { stdout: dOut } = await runner("docker inspect openclaw 2>/dev/null || true");
+    const arr = JSON.parse(dOut || "[]");
+    const inspect = arr[0] || null;
+    docker = {
+      containerState: inspect?.State?.Status || null,
+      startedAt: inspect?.State?.StartedAt || null,
+      healthStatus: inspect?.State?.Health?.Status || null
+    };
+  }
+
+  return {
+    id: machine.id,
+    name: machine.name,
+    hasDocker: machine.hasDocker,
+    model: parseModelFromStatus(statusRaw),
+    channels: parseChannelsStatus(channelsRaw),
+    docker
+  };
+}
+
+app.get("/api/machines", async (req, res) => {
+  const machines = [];
+  for (const m of config.machines) {
+    if (!m.enabled) continue;
+    try {
+      const data = await fetchMachine({ ...m, local: false });
+      machines.push(data);
+    } catch (e) {
+      machines.push({ id: m.id, name: m.name, error: e.message || String(e) });
     }
   }
-  return { channels, raw: data };
-}
-
-async function fetchRpiChannels() {
-  const { host, user, keyPath } = config.rpi;
-  const cmd = `ssh -i "${keyPath}" -o StrictHostKeyChecking=accept-new ${user}@${host} "openclaw channels status --json"`;
-  const { stdout, stderr } = await exec(cmd);
-  const raw = extractJson(stdout) || extractJson(stderr) || "{}";
-  const data = JSON.parse(raw);
-  const channels = [];
-  const chat = data?.chat || {};
-  for (const [type, ids] of Object.entries(chat)) {
-    for (const id of ids || []) {
-      channels.push({ type, channel: type, id, status: "configured" });
-    }
-  }
-  return { channels, raw: data };
-}
-
-app.get("/api/channels", async (req, res) => {
-  try {
-    const local = await fetchLocalChannels();
-    const rpi = await fetchRpiChannels();
-    res.json({ local, rpi });
-  } catch (e) {
-    res.status(500).json({ error: e.message || String(e) });
-  }
+  res.json({ machines });
 });
 
 const port = 3001;

@@ -11,10 +11,9 @@
 - CPU / 内存 / RSS 监控
 - HTTP 健康检查
 - 日志查看（Qwen / MiniMax）
-- OpenClaw Channels 配置列表（本机 + 树莓派）
-- 显示 channel 类型 / id
-- 树莓派通过 SSH 拉取 `openclaw channels status --json`
+- 多机器 OpenClaw 状态汇总（SSH 拉取）
 - OpenClaw Docker 状态（container state / startedAt / health）
+- OpenClaw 当前模型与 Bot（来自 `openclaw status --json` / `channels status --json`）
 
 ---
 
@@ -70,7 +69,7 @@ npm run dev:web
 - 日志路径
 - OpenClaw 容器配置与 workspace 路径
 - OpenClaw sessions 路径（用于累计 token）
-- 树莓派 SSH 配置（host/user/keyPath）
+- 多机器 SSH 配置（host/user/keyPath）
 
 建议根据你的实际磁盘挂载路径修改 `modelPath`。
 OpenClaw 宿主机路径默认使用：
