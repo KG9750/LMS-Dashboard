@@ -155,6 +155,7 @@ export default function App() {
             className="px-3 py-1 rounded bg-rose-600 hover:bg-rose-500 text-sm"
             onClick={async () => {
               await fetch(`${API}/api/shutdown`, { method: "POST" });
+              setMessage("后端已关闭（3001 释放）。前端仍在运行，需手动停止 dev:web。");
             }}
           >
             Close Dashboard
